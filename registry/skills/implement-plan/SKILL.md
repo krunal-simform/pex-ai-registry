@@ -1,7 +1,7 @@
 ---
 name: implement-plan
-description: Use to build an approved plan step by step. Follows the plan exactly, checks after each step, flags deviations instead of improvising, and stops after repeated failure.
-compatibility: "Needs read and write access to the project's files and a git working branch."
+description: Use to build an approved plan step by step. Follows the plan exactly, checks after each step, explains deviations instead of improvising, and stops after repeated failure.
+compatibility: "Needs read and write access to the project's files and a working branch."
 allowed-tools:
   - ls
   - read_file
@@ -11,22 +11,21 @@ allowed-tools:
   - grep
   - execute
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Implement the plan
 
 ## Scope
 
-This skill only builds what an approved plan says. It does not make or change the plan (`plan-first`), review the work (`pr-review`) or open the pull request (`git-branch-and-pr`).
+This skill only builds what an approved plan says. It does not make or change the plan (`plan-first`) or review the work (`pr-review`). It never commits or pushes.
 
 Carry out the approved plan. Do not redesign it.
 
 ## Before you start
 
 - Read the whole plan and its definition of done.
-- Confirm it was approved. If not, stop and ask with `raise-decision`.
-- Make sure you are on a working branch, not the default branch.
+- Work on the working branch named in the message you were given.
 
 ## For each step, in order
 
@@ -41,7 +40,7 @@ Carry out the approved plan. Do not redesign it.
 If a step cannot be done as written, or needs something the plan does not cover:
 
 - Do not skip it. Do not quietly change it.
-- Say what deviates and why, then ask with `raise-decision` (Answer Question) and stop.
+- Do what is clearly right and smallest, and report what deviates and why in your notes.
 
 ## Verify before you rely on anything
 
@@ -51,18 +50,18 @@ If a step cannot be done as written, or needs something the plan does not cover:
 
 ## After three failed attempts
 
-Stop. Raise a Resolve Failure decision with: what is done, what is blocked, what you tried, and what you need.
+Stop. Report in your notes: what is done, what is blocked, what you tried, and what you need.
 
 ## Finish
 
 1. Run the plan's test plan with `test-report`.
 2. Re-read your own diff. Remove TODOs, debug output and unrelated edits.
-3. Hand off with `git-branch-and-pr`.
+3. Report the results in your notes.
 
 ## Rules
 
-- No changes outside the plan's file list without a decision.
-- If you touch login, permissions or personal data, say so in your summary.
+- No changes outside the plan's file list without explaining it in your notes.
+- If you touch login, permissions or personal data, say so in your notes.
 - If told to stop, stop at once and report where you are.
 
 ## Hard limits
