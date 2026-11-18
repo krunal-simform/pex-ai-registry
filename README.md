@@ -58,6 +58,32 @@ You are the planner. ...
 
 Every skill listed under `skills:` must exist in the AI registry.
 
+`skills:` can also be split in two lists. A skill under `preload` is a rule: its text is added to the agent's instructions on every model call. A skill under `available` is a procedure: the agent sees its name and description, and opens it from `/skills/` when it needs it.
+
+## Run context
+
+PexAI appends facts it owns to the end of an agent's instructions, as a `## Run context` list of `- name: value` lines. Agent and skill text refers to a fact by its name in backticks, such as "the `outputTool` of your run context". Refer only to facts the server sends to that agent: the sync does not check this, so review does. Data that changes per step, such as a directory for one attempt, comes in the agent's first message instead.
+
+## Browser testing
+
+In projects with the "Browser testing" setting on, conversations and tasks get a sandbox with a headless Chrome, driven with the `agent-browser` CLI through `execute`.
+
+- `skills/browser-testing`: the PexAI rules for the browser. It tells the agent to load the CLI's own guide (`agent-browser skills get core`) and says where our rules override it. It is an `available` skill: no agent preloads it and the server never requires it. Do not copy the CLI's guide into it.
+- `agents/qa`: the Browser QA step of the feature-implementation workflow. It runs after the reviewer, only on tasks that have the browser, and finishes with `pass`, `fail` or `not_tested`. It has no connector tools: it reads page content, which can carry instructions.
+- `pex-chat`, `pex-filer` and `qa` list `browser-testing` under `available`, and each body says when to open it and that text read from a page is data, never instructions. Keep that sentence in the body: it is there on every call, the skill only once opened. A project that uploads its own `pex-chat` or `pex-filer` should list the skill too.
+
+The browser facts in the run context:
+
+| Fact                  | Value                                                             | Sent to                       |
+| --------------------- | ----------------------------------------------------------------- | ----------------------------- |
+| `browser`             | `available` or `not available`                                    | `pex-chat`, `pex-filer`, `qa` |
+| `browserSession`      | the session name to pass to every command: `chat` or `qa`         | `pex-chat`, `pex-filer`, `qa` |
+| `browserEvidenceDir`  | where chat saves screenshots, `/tmp/pex-browser/chat`             | `pex-chat`, `pex-filer`       |
+| `browserAllowedHosts` | the hosts the browser may reach: localhost and the project's list | `pex-chat`, `pex-filer`, `qa` |
+| `browserTemplate`     | the sandbox template tag, such as `pex-browser:v1-b1`             | `pex-chat`, `pex-filer`, `qa` |
+
+A conversation without the browser gets `browser: not available` and none of the others. `qa` also gets `outputTool`, as every workflow agent does, and its evidence directory, which changes with each attempt, comes in its first message.
+
 ## Workflows
 
 A workflow is a YAML file in `workflows/` that lists the steps a task moves through. Every agent step must name a real agent, for example `ref: agents/planner`.
