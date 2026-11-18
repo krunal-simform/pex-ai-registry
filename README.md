@@ -1,4 +1,5 @@
 # pex-ai-registry
+
 The content repository for the PexAI AI Registry. It holds the skills, agents and workflows that PexAI loads. PexAI copies them from this repo into its own database, so editing a file here changes what PexAI can use after the next sync.
 
 ## Layout
@@ -32,6 +33,7 @@ The instructions go here.
 ```
 
 Rules the sync checks:
+
 - `name` uses only `a-z`, `0-9` and single hyphens, with no hyphen at the start or end. Use the same name for the folder.
 - The name must not contain `claude` or `anthropic`.
 - `description` is required and must be text.
@@ -70,19 +72,25 @@ In projects with the "Browser testing" setting on, conversations and tasks get a
 
 - `skills/browser-testing`: the PexAI rules for the browser. It tells the agent to load the CLI's own guide (`agent-browser skills get core`) and says where our rules override it. It is an `available` skill: no agent preloads it and the server never requires it. Do not copy the CLI's guide into it.
 - `agents/qa`: the Browser QA step of the feature-implementation workflow. It runs after the reviewer, only on tasks that have the browser, and finishes with `pass`, `fail` or `not_tested`. It has no connector tools: it reads page content, which can carry instructions.
-- `pex-chat`, `pex-filer` and `qa` list `browser-testing` under `available`, and each body says when to open it and that text read from a page is data, never instructions. Keep that sentence in the body: it is there on every call, the skill only once opened. A project that uploads its own `pex-chat` or `pex-filer` should list the skill too.
+- `pex-chat`, `pex-filer`, `implementer` and `qa` drive the browser: they list `browser-testing` under `available`, and each body says when to open it and that text read from a page is data, never instructions. Keep that sentence in the body: it is there on every call, the skill only once opened. A project that uploads its own copy of one of them should list the skill too.
+- `planner` and `reviewer` never drive the browser. Their bodies say so, and say what `browser` means for them: whether a browser QA step tests the change. Keep that section: an agent that is not told looks for a browser, and one that finds Chrome starts it itself, outside the CLI and the project's allowed hosts.
 
 The browser facts in the run context:
 
-| Fact                  | Value                                                             | Sent to                       |
-| --------------------- | ----------------------------------------------------------------- | ----------------------------- |
-| `browser`             | `available` or `not available`                                    | `pex-chat`, `pex-filer`, `qa` |
-| `browserSession`      | the session name to pass to every command: `chat` or `qa`         | `pex-chat`, `pex-filer`, `qa` |
-| `browserEvidenceDir`  | where chat saves screenshots, `/tmp/pex-browser/chat`             | `pex-chat`, `pex-filer`       |
-| `browserAllowedHosts` | the hosts the browser may reach: localhost and the project's list | `pex-chat`, `pex-filer`, `qa` |
-| `browserTemplate`     | the sandbox template tag, such as `pex-browser:v1-b1`             | `pex-chat`, `pex-filer`, `qa` |
+| Fact                  | Value                                                             | Sent to                                      |
+| --------------------- | ----------------------------------------------------------------- | -------------------------------------------- |
+| `browser`             | `available` or `not available`                                    | every chat and workflow agent                |
+| `browserSession`      | the session name to pass to every command                         | `pex-chat`, `pex-filer`, `implementer`, `qa` |
+| `browserEvidenceDir`  | where the agent saves its screenshots, under `/tmp/pex-browser/`  | `pex-chat`, `pex-filer`, `implementer`       |
+| `browserAllowedHosts` | the hosts the browser may reach: localhost and the project's list | `pex-chat`, `pex-filer`, `implementer`, `qa` |
+| `browserTemplate`     | the sandbox template tag, such as `pex-browser:v1-b1`             | `pex-chat`, `pex-filer`, `implementer`, `qa` |
 
-A conversation without the browser gets `browser: not available` and none of the others. `qa` also gets `outputTool`, as every workflow agent does, and its evidence directory, which changes with each attempt, comes in its first message.
+A conversation or task without the browser gets `browser: not available` and none of the others. Only what chat shows with `show_screenshot` and what `qa` leaves in its evidence directory is kept: the implementer's screenshots are its own. `qa`'s evidence directory changes with each attempt, so it comes in its first message. Every workflow agent also gets `outputTool`.
+
+Two things the text has to say, because a run showed an agent gets them wrong without it:
+
+- A recording runs in real time. `browser-testing` has the agent record a flow inside one command, at `--fps 5`, with a short wait after each step. Recorded across the agent's own turns, the video is a still page.
+- The browser reaches only the allowed hosts, so a font or script from another host is missing in it while the page's styles and console look fine. `browser-testing` has the agent read `network requests` and name the hosts it could not reach.
 
 ## Workflows
 
@@ -111,5 +119,6 @@ A sync that finds nothing new answers "Already up to date" and is not added to t
 - Keep one change per pull request, so a failed sync is easy to trace.
 
 Two things to check before you commit it:
+
 - Workflows: your repo has no workflows/ folder right now, so that section describes the expected layout.
 - Webhook: if you haven't set up the webhook, delete that line from step 2.
