@@ -6,7 +6,7 @@ allowed-tools:
   - read_file
   - execute
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Test report
@@ -22,7 +22,7 @@ Do not say work is done until you have run the checks and read the output.
 1. **Find the commands.** Read the project's docs and scripts for how tests, typecheck and lint run. Do not guess.
 2. **Run them.** Run the narrow ones for your change first, then the wider set the project uses before a pull request.
 3. **Read the output.** Note what passed, what failed and what did not run.
-4. **Write the report.** Save it with `write-artifact` as type `Test report`.
+4. **Write the report.** Put it in your result: in the notes for the implementer, in the summary or findings for the reviewer.
 
 ## The report says
 
@@ -39,7 +39,7 @@ Do not say work is done until you have run the checks and read the output.
 - A test that fails before your change too is "pre-existing". Say so, with proof.
 - Do not change a test to make it pass unless the plan says the behavior changed.
 - If you cannot run a check (missing database, no access), say that and why. Do not claim it passed.
-- If a failure is not yours to fix, raise a Resolve Failure decision instead of looping.
+- If a failure is not yours to fix, report it and stop instead of looping.
 
 ## Hard limits
 
